@@ -1,0 +1,4 @@
+# Optional AI/LLM Providers
+# Install only if you want to use these providers
+openai==1.3.5
+anthropic==0.7.8

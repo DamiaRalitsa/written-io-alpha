@@ -1,0 +1,36 @@
+# Core Dependencies - Required
+flask==3.0.0
+python-dotenv==1.0.0
+requests==2.31.0
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+
+# AI/LLM Integration - Core (Gemini - Primary)
+google-generativeai==0.3.2
+
+# Web Framework & UI
+flask-cors==4.0.0
+flask-sqlalchemy==3.1.1
+
+# Data Processing (updated for Python 3.12 compatibility)
+pandas==2.1.4
+numpy>=1.26.0
+
+# Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+
+# Development Tools
+black==23.11.0
+flake8==6.1.0
+mypy==1.7.1
+
+# Async Support
+aiohttp==3.9.1
+
+# Logging & Monitoring
+loguru==0.7.2
+
+# Environment & Configuration
+pydantic==2.5.0
+pydantic-settings==2.1.0

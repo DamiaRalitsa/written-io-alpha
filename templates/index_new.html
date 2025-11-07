@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Written - AI Activity Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .chat-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .user-info {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .position-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+            min-width: 200px;
+        }
+        
+        .position-prefix {
+            background: #007bff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+        
+        .message {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            max-width: 85%;
+        }
+        
+        .message.user {
+            background: #007bff;
+            color: white;
+            margin-left: auto;
+        }
+        
+        .message.assistant {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #e9ecef;
+        }
+        
+        .message.error {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .message-meta {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid #e9ecef;
+            background: #f8f9fa;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .input-field {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 50px;
+        }
+        
+        .send-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .send-button:hover {
+            background: #0056b3;
+        }
+        
+        .send-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .activity-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .activity-form input,
+        .activity-form select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .activity-form .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .generated-activity {
+            background: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .activity-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-indicator.online {
+            background: #28a745;
+        }
+        
+        .status-indicator.offline {
+            background: #dc3545;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .activity-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .user-info {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Written</h1>
+            <p>AI-Powered Activity Generator for Taiga</p>
+        </header>
+        
+        <div class="chat-container">
+            <div class="user-info">
+                <div>
+                    <label for="positionSelect">Position:</label>
+                    <select id="positionSelect" class="position-select">
+                        <option value="">Select your position...</option>
+                    </select>
+                </div>
+                <div id="positionPrefix" class="position-prefix" style="display: none;"></div>
+                <div style="margin-left: auto;">
+                    <span class="status-indicator online"></span>
+                    <span id="statusText">Ready</span>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message assistant">
+                    <div><strong>Welcome to Written!</strong></div>
+                    <div>I'm here to help you generate professional activity descriptions for Taiga. 
+                    Select your position above and describe what you worked on today.</div>
+                </div>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div>🤖 Generating activity description...</div>
+            </div>
+            
+            <div class="input-area">
+                <div class="activity-form">
+                    <input type="date" id="activityDate" title="Activity Date">
+                    <input type="number" id="hoursSpent" placeholder="Hours spent" step="0.5" min="0" max="24" title="Hours Spent">
+                    <select id="projectSelect" class="full-width">
+                        <option value="">Select project (optional)...</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <textarea 
+                        id="userInput" 
+                        class="input-field" 
+                        placeholder="Describe what you worked on... (e.g., 'Fixed login bug', 'Developed user dashboard', 'Reviewed pull requests')"
+                        rows="3"
+                    ></textarea>
+                    <button id="generateButton" class="send-button">Generate Activity</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentUser = null;
+        let projects = [];
+        let positions = [];
+        
+        // DOM elements
+        const positionSelect = document.getElementById('positionSelect');
+        const positionPrefix = document.getElementById('positionPrefix');
+        const chatMessages = document.getElementById('chatMessages');
+        const userInput = document.getElementById('userInput');
+        const generateButton = document.getElementById('generateButton');
+        const loading = document.getElementById('loading');
+        const statusText = document.getElementById('statusText');
+        const activityDate = document.getElementById('activityDate');
+        const hoursSpent = document.getElementById('hoursSpent');
+        const projectSelect = document.getElementById('projectSelect');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+        
+        async function initializeApp() {
+            // Set default date to today
+            activityDate.value = new Date().toISOString().split('T')[0];
+            hoursSpent.value = '8';
+            
+            // Load positions
+            await loadPositions();
+            
+            // Load projects
+            await loadProjects();
+            
+            // Load current user
+            await loadCurrentUser();
+            
+            // Set up event listeners
+            setupEventListeners();
+        }
+        
+        function setupEventListeners() {
+            generateButton.addEventListener('click', generateActivity);
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    generateActivity();
+                }
+            });
+            
+            positionSelect.addEventListener('change', handlePositionChange);
+        }
+        
+        async function loadPositions() {
+            try {
+                const response = await fetch('/api/user-positions');
+                const data = await response.json();
+                
+                if (data.success) {
+                    positions = data.positions;
+                    populatePositionSelect();
+                } else {
+                    console.error('Failed to load positions:', data.error);
+                }
+            } catch (error) {
+                console.error('Error loading positions:', error);
+            }
+        }
+        
+        function populatePositionSelect() {
+            positionSelect.innerHTML = '<option value="">Select your position...</option>';
+            
+            positions.forEach(position => {
+                const option = document.createElement('option');
+                option.value = position.id;
+                option.textContent = `${position.position_name} - [${position.position_prefix}]`;
+                option.dataset.prefix = position.position_prefix;
+                option.dataset.name = position.position_name;
+                positionSelect.appendChild(option);
+            });
+        }
+        
+        async function loadProjects() {
+            try {
+                const response = await fetch('/api/projects');
+                const data = await response.json();
+                
+                if (data.success) {
+                    projects = data.projects;
+                    populateProjectSelect();
+                } else {
+                    console.log('Projects not loaded (Taiga may not be configured)');
+                }
+            } catch (error) {
+                console.log('Projects not available:', error);
+            }
+        }
+        
+        function populateProjectSelect() {
+            projectSelect.innerHTML = '<option value="">Select project (optional)...</option>';
+            
+            projects.forEach(project => {
+                const option = document.createElement('option');
+                option.value = project.id;
+                option.textContent = project.name;
+                projectSelect.appendChild(option);
+            });
+        }
+        
+        async function loadCurrentUser() {
+            try {
+                const response = await fetch('/api/current-user');
+                const data = await response.json();
+                
+                if (data.success && data.user) {
+                    currentUser = data.user;
+                    
+                    // Select the user's current position
+                    if (currentUser.position) {
+                        const position = positions.find(p => p.position_name === currentUser.position);
+                        if (position) {
+                            positionSelect.value = position.id;
+                            updatePositionPrefix(position.position_prefix);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading current user:', error);
+            }
+        }
+        
+        async function handlePositionChange() {
+            const selectedOption = positionSelect.selectedOptions[0];
+            
+            if (selectedOption && selectedOption.value) {
+                const positionId = selectedOption.value;
+                const prefix = selectedOption.dataset.prefix;
+                
+                // Update UI immediately
+                updatePositionPrefix(prefix);
+                
+                // Save to server
+                try {
+                    const response = await fetch('/api/set-user-position', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            position_id: parseInt(positionId),
+                            user_id: currentUser?.id || 1
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        currentUser = data.user;
+                        statusText.textContent = `Ready as ${currentUser.position}`;
+                    }
+                } catch (error) {
+                    console.error('Error setting position:', error);
+                }
+            } else {
+                updatePositionPrefix(null);
+                statusText.textContent = 'Ready';
+            }
+        }
+        
+        function updatePositionPrefix(prefix) {
+            if (prefix) {
+                positionPrefix.textContent = `[${prefix}]`;
+                positionPrefix.style.display = 'inline-block';
+            } else {
+                positionPrefix.style.display = 'none';
+            }
+        }
+        
+        async function generateActivity() {
+            const input = userInput.value.trim();
+            
+            if (!input) {
+                alert('Please describe what you worked on');
+                return;
+            }
+            
+            if (!positionSelect.value) {
+                alert('Please select your position first');
+                return;
+            }
+            
+            // Show loading state
+            generateButton.disabled = true;
+            loading.classList.add('show');
+            statusText.textContent = 'Generating...';
+            
+            // Add user message to chat
+            addMessage('user', input);
+            
+            try {
+                const payload = {
+                    user_input: input,
+                    user_id: currentUser?.id || 1,
+                    hours: parseFloat(hoursSpent.value) || 0,
+                    date: activityDate.value,
+                    project_id: projectSelect.value || null
+                };
+                
+                const response = await fetch('/api/generate-activity', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Add generated activity to chat
+                    addGeneratedActivity(data.description, data);
+                    statusText.textContent = 'Activity generated successfully!';
+                } else {
+                    addMessage('error', `Error: ${data.error}`);
+                    statusText.textContent = 'Generation failed';
+                }
+                
+            } catch (error) {
+                console.error('Error generating activity:', error);
+                addMessage('error', 'Failed to generate activity. Please try again.');
+                statusText.textContent = 'Error occurred';
+            } finally {
+                // Reset state
+                generateButton.disabled = false;
+                loading.classList.remove('show');
+                userInput.value = '';
+                
+                setTimeout(() => {
+                    statusText.textContent = `Ready as ${currentUser?.position || 'user'}`;
+                }, 2000);
+            }
+        }
+        
+        function addMessage(type, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.textContent = content;
+            messageDiv.appendChild(contentDiv);
+            
+            const metaDiv = document.createElement('div');
+            metaDiv.className = 'message-meta';
+            metaDiv.textContent = new Date().toLocaleTimeString();
+            messageDiv.appendChild(metaDiv);
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function addGeneratedActivity(description, data) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message assistant';
+            
+            const activityDiv = document.createElement('div');
+            activityDiv.className = 'generated-activity';
+            
+            const descriptionDiv = document.createElement('div');
+            descriptionDiv.innerHTML = `<strong>Generated Activity:</strong><br>${description}`;
+            activityDiv.appendChild(descriptionDiv);
+            
+            if (data.model_used) {
+                const metaDiv = document.createElement('div');
+                metaDiv.className = 'message-meta';
+                metaDiv.textContent = `Generated using ${data.model_used} (${data.provider})`;
+                activityDiv.appendChild(metaDiv);
+            }
+            
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'activity-actions';
+            
+            const submitBtn = document.createElement('button');
+            submitBtn.className = 'btn btn-primary';
+            submitBtn.textContent = 'Submit to Taiga';
+            submitBtn.onclick = () => submitActivity(description);
+            actionsDiv.appendChild(submitBtn);
+            
+            const regenerateBtn = document.createElement('button');
+            regenerateBtn.className = 'btn btn-secondary';
+            regenerateBtn.textContent = 'Regenerate';
+            regenerateBtn.onclick = generateActivity;
+            actionsDiv.appendChild(regenerateBtn);
+            
+            activityDiv.appendChild(actionsDiv);
+            messageDiv.appendChild(activityDiv);
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        async function submitActivity(description) {
+            try {
+                const payload = {
+                    project_id: parseInt(projectSelect.value) || 1,
+                    description: description,
+                    hours: parseFloat(hoursSpent.value) || 0,
+                    date: activityDate.value,
+                    user_id: currentUser?.id || 1
+                };
+                
+                const response = await fetch('/api/submit-activity', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addMessage('assistant', '✅ Activity submitted to Taiga successfully!');
+                } else {
+                    addMessage('error', `❌ Failed to submit to Taiga: ${data.error}`);
+                }
+                
+            } catch (error) {
+                console.error('Error submitting activity:', error);
+                addMessage('error', '❌ Failed to submit activity to Taiga');
+            }
+        }
+    </script>
+</body>
+</html>
